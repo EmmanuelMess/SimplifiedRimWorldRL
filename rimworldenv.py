@@ -1,3 +1,4 @@
+import numpy as np
 import pygame as game
 import gym
 from gym import spaces
@@ -45,7 +46,7 @@ class SimpleRimWorldEnv(gym.Env):
         return obs, reward, done, {}
 
     def _getAll(self):
-        return [[self._getElemForPos((i, j)) for j in range(self.sizeY)] for i in range(self.sizeX)]
+        return np.asarray([[self._getElemForPos((i, j)) for j in range(self.sizeY)] for i in range(self.sizeX)]).ravel()
 
     def _getElemForPos(self, pos: tuple):
         if pos in self.actors:
