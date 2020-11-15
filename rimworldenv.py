@@ -39,6 +39,7 @@ class SimpleRimWorldEnv(gym.Env):
         if isAttack:
             if attackAt in self.enemies:
                 reward += 1.0
+                self.enemies.remove(attackAt)
 
         done = len(self.enemies) == 0
         obs = self._getAll()
