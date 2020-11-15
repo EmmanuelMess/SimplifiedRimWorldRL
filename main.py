@@ -2,7 +2,6 @@ import numpy
 import pygame as game
 from rimworldenv import SimpleRimWorldEnv
 
-import gym
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
