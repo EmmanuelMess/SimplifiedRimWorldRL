@@ -78,8 +78,8 @@ class SimpleRimWorldEnv(gym.Env):
             self.numberOfActors = 1
             self.numberOfEnemies = 3
         else:
-            self.numberOfActors = 1
-            self.numberOfEnemies = 3
+            self.numberOfActors = 2
+            self.numberOfEnemies = 6
 
         self.actors = [(int(self.sizeX/2), int(self.sizeY/2))] #array of positions
         self.blocks = [] #array of positions
@@ -95,6 +95,9 @@ class SimpleRimWorldEnv(gym.Env):
 
         self.enemies = possibleEnemies[:self.numberOfEnemies]
 
+        if self.numberOfActors > 1:
+            self.actors.append((int(self.sizeX / 2) + 1, int(self.sizeY / 2)))
+
         return self._getAll()
 
     def render(self, mode='human', close=False):
@@ -102,7 +105,7 @@ class SimpleRimWorldEnv(gym.Env):
             return
 
         for event in game.event.get():
-            if event.type in (game.QUIT, game.KEYDOWN):
+            if event.type == game.QUIT:
                 self.screen = None
                 game.display.quit()
                 return
