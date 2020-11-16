@@ -81,7 +81,7 @@ def main():
     ACTORS = 1
 
     screen = game.display.set_mode((640, 480))
-    env = SimpleRimWorldEnv(ACTORS, 1, SIZE_X, SIZE_Y, screen)
+    env = SimpleRimWorldEnv(SIZE_X, SIZE_Y, screen)
     model = ActorCritic(SIZE_X*SIZE_Y, ACTORS)
     print_interval = 20
     score = 0.0
@@ -95,7 +95,7 @@ def main():
                 m = Categorical(prob)
                 a = m.sample().item()
                 index = numpy.unravel_index(a, (SIZE_X, SIZE_Y, ACTORS))
-                action = actionAttack(index[0], (index[1], index[2]))
+                action = actionAttack(index[2], (index[0], index[1]))
                 s_prime, r, done, info = env.step(action)
                 model.put_data((s, a, r, s_prime, done))
 
