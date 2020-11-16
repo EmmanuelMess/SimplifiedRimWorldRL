@@ -44,12 +44,22 @@ class SimpleRimWorldEnv(gym.Env):
         isAttack = action[3][0]
         attackAt = action[3][1]
 
-        if isAttack:
-            if attackAt in self.enemies:
-                reward += 1.0
-                self.enemies.remove(attackAt)
-            else:
-                reward -= 0.0000002
+        if actorIndex >= len(self.actors):
+            reward -= 0.0000002
+        else:
+            if isMove:
+                if moveTo not in self.actors and moveTo not in self.blocks and moveTo not in self.enemies:
+                    self.actors.remove(self.actors[actorIndex])
+                    self.actors.append(moveTo)
+                else:
+                    reward -= 0.0000002
+
+            if isAttack:
+                if attackAt in self.enemies:
+                    reward += 1.0
+                    self.enemies.remove(attackAt)
+                else:
+                    reward -= 0.0000002
 
         done = len(self.enemies) == 0
         obs = self._getAll()

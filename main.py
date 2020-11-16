@@ -20,7 +20,7 @@ class ActorCritic(nn.Module):
         self.data = []
 
         self.fc1 = nn.Linear(sizeGrid, 256)
-        self.fc_pi = nn.Linear(256, sizeGrid*numberOfActors)
+        self.fc_pi = nn.Linear(256, sizeGrid*numberOfActors + sizeGrid*numberOfActors)
         self.fc_v = nn.Linear(256, 1)
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
 
@@ -71,6 +71,10 @@ class ActorCritic(nn.Module):
         self.optimizer.step()
 
 
+def actionMove(targetId: int, pos: tuple):
+    return targetId, (True, pos), 0, (False, (0, 0))
+
+
 def actionAttack(targetId: int, pos: tuple):
     return targetId, (False, (0, 0)), 0, (True, pos)
 
@@ -94,8 +98,11 @@ def main():
                 prob = model.pi(torch.from_numpy(s).float())
                 m = Categorical(prob)
                 a = m.sample().item()
-                index = numpy.unravel_index(a, (SIZE_X, SIZE_Y, ACTORS))
-                action = actionAttack(index[2], (index[0], index[1]))
+                index = numpy.unravel_index(a, (SIZE_X, SIZE_Y, ACTORS, 2))
+                if index[3] == 0:
+                    action = actionMove(index[2], (index[0], index[1]))
+                else:
+                    action = actionAttack(index[2], (index[0], index[1]))
                 s_prime, r, done, info = env.step(action)
                 model.put_data((s, a, r, s_prime, done))
 
