@@ -79,11 +79,20 @@ def actionAttack(targetId: int, pos: tuple):
     return targetId, (False, (0, 0)), 0, (True, pos)
 
 
-def main():
-    SIZE_X = 10
-    SIZE_Y = 10
-    ACTORS = 1
+SIZE_X = 10
+SIZE_Y = 10
+ACTORS = 1
 
+
+def translateToAction(result: int):
+    index = numpy.unravel_index(result, (SIZE_X, SIZE_Y, ACTORS, 2))
+    if index[3] == 0:
+        return actionMove(index[2], (index[0], index[1]))
+    else:
+        return actionAttack(index[2], (index[0], index[1]))
+
+
+def main():
     screen = game.display.set_mode((640, 480))
     env = SimpleRimWorldEnv(SIZE_X, SIZE_Y, screen)
     model = ActorCritic(SIZE_X*SIZE_Y, ACTORS)
@@ -98,12 +107,7 @@ def main():
                 prob = model.pi(torch.from_numpy(s).float())
                 m = Categorical(prob)
                 a = m.sample().item()
-                index = numpy.unravel_index(a, (SIZE_X, SIZE_Y, ACTORS, 2))
-                if index[3] == 0:
-                    action = actionMove(index[2], (index[0], index[1]))
-                else:
-                    action = actionAttack(index[2], (index[0], index[1]))
-                s_prime, r, done, info = env.step(action)
+                s_prime, r, done, info = env.step(translateToAction(a))
                 model.put_data((s, a, r, s_prime, done))
 
                 s = s_prime
