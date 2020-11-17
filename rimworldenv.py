@@ -61,7 +61,14 @@ class SimpleRimWorldEnv(gym.Env):
                 else:
                     reward -= 0.0000002
 
-        done = len(self.enemies) == 0
+        for enemy in self.enemies:
+            if len(self.actors) > 0:
+                target = random.choice(self.actors)
+                if random.uniform(0, 10) <= 6:
+                    self.actors.remove(target)
+                    reward -= 1.0
+
+        done = len(self.actors) == 0 or len(self.enemies) == 0
         obs = self._getAll()
 
         return obs, reward, done, {}
