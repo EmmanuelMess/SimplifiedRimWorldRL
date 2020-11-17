@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 import pygame as game
 import gym
@@ -63,9 +61,9 @@ class SimpleRimWorldEnv(gym.Env):
 
         for enemy in self.enemies:
             if len(self.actors) > 0:
-                target = random.choice(self.actors)
-                if random.uniform(0, 10) <= 6:
-                    self.actors.remove(target)
+                targetIndex = np.random.randint(0, len(self.actors))
+                if np.random.uniform(0, 10) <= 6:
+                    self.actors.remove(self.actors[targetIndex])
                     reward -= 1.0
 
         done = len(self.actors) == 0 or len(self.enemies) == 0
@@ -108,7 +106,7 @@ class SimpleRimWorldEnv(gym.Env):
                             + [(0, y) for y in range(1, self.sizeY-1)] \
                             + [(self.sizeY-1, y) for y in range(1, self.sizeY-1)]
 
-        random.shuffle(possibleEnemies) # FIXME use seed
+        np.random.shuffle(possibleEnemies) # FIXME use seed
 
         self.enemies = possibleEnemies[:self.numberOfEnemies]
 
@@ -116,6 +114,9 @@ class SimpleRimWorldEnv(gym.Env):
             self.actors.append((int(self.sizeX / 2) + 1, int(self.sizeY / 2)))
 
         return self._getAll()
+
+    def seed(self, seed=None):
+        self.seed = seed
 
     def render(self, mode='human', close=False):
         if self.screen is None:
