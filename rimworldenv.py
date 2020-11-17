@@ -3,6 +3,8 @@ import pygame as game
 import gym
 from gym import spaces
 
+import intersection
+
 
 class SimpleRimWorldEnv(gym.Env):
     """Custom Environment that follows gym interface"""
@@ -53,7 +55,8 @@ class SimpleRimWorldEnv(gym.Env):
                     reward -= 0.0000002
 
             if isAttack:
-                if attackAt in self.enemies:
+                collided = any([intersection.doesIntersect(self.actors[actorIndex], attackAt, box, 1, 1) for box in self.blocks])
+                if attackAt in self.enemies and not collided:
                     reward += 1.0
                     self.enemies.remove(attackAt)
                 else:
@@ -62,9 +65,14 @@ class SimpleRimWorldEnv(gym.Env):
         for enemy in self.enemies:
             if len(self.actors) > 0:
                 targetIndex = np.random.randint(0, len(self.actors))
-                if np.random.uniform(0, 10) <= 6:
-                    self.actors.remove(self.actors[targetIndex])
-                    reward -= 1.0
+                target = self.actors[targetIndex]
+                if np.random.uniform(0, 10) <= 1:
+                    collides = any([intersection.doesIntersect(enemy, target, box, 1, 1) for box in self.blocks])
+                    if not collides:
+                        self.actors.remove(target)
+                        reward -= 1.0
+
+        reward -= 0.00000001
 
         done = len(self.actors) == 0 or len(self.enemies) == 0
         obs = self._getAll()
@@ -90,14 +98,14 @@ class SimpleRimWorldEnv(gym.Env):
             self.numberOfActors = 1
             self.numberOfEnemies = 1
         elif self.episodeNumber < 200:
-            self.numberOfActors = 1
-            self.numberOfEnemies = 3
+            self.numberOfActors = 2
+            self.numberOfEnemies = 2
         else:
             self.numberOfActors = 2
-            self.numberOfEnemies = 6
+            self.numberOfEnemies = 2
 
         self.actors = [(int(self.sizeX/2), int(self.sizeY/2))] #array of positions
-        self.blocks = [] #array of positions
+        self.blocks = [(1, 1)] #array of positions
         self.moving = {0: False} #dictionary of index of actor to False or position
         self.enemies = [] #array of positions
 

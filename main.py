@@ -99,7 +99,7 @@ def main():
     print_interval = 20
     score = 0.0
 
-    for n_epi in range(10000):
+    for n_epi in range(100000):
         done = False
         s = env.reset()
         while not done:
