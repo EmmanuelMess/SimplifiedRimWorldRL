@@ -73,7 +73,7 @@ class SimpleRimWorldEnv(gym.Env):
             if len(self.actors) > 0:
                 targetIndex = np.random.randint(0, len(self.actors))
                 target = self.actors[targetIndex]
-                if np.random.uniform(0, 10) <= 1:
+                if np.random.uniform(0, 10) < 6:
                     collides = self._checkCollision(enemy, target)
                     if not collides:
                         self.shots = [(enemy, target)]
