@@ -9,6 +9,10 @@ import intersection
 class SimpleRimWorldEnv(gym.Env):
     """Custom Environment that follows gym interface"""
 
+    SQUARE_SIZE: float
+    WHITE = game.Color(255, 255, 255)
+    RED = game.Color(255, 0, 0)
+
     MAX_ACTORS = 10
     MAX_ENEMIES = 10
 
@@ -21,9 +25,12 @@ class SimpleRimWorldEnv(gym.Env):
     def __init__(self, sizeX: int, sizeY: int, screen: game.Surface = None):
         super(SimpleRimWorldEnv, self).__init__()
 
+        self.SQUARE_SIZE = min(screen.get_rect().width / sizeX, screen.get_rect().height / sizeY)
+
         self.sizeX = sizeX
         self.sizeY = sizeY
         self.screen = screen
+        self.shots = []
 
         self.action_space = spaces.Tuple((
             spaces.Discrete(self.MAX_ACTORS),  #actor select
@@ -55,7 +62,7 @@ class SimpleRimWorldEnv(gym.Env):
                     reward -= 0.0000002
 
             if isAttack:
-                collided = any([intersection.doesIntersect(self.actors[actorIndex], attackAt, box, 1, 1) for box in self.blocks])
+                collided = self._checkCollision(self.actors[actorIndex], attackAt)
                 if attackAt in self.enemies and not collided:
                     reward += 1.0
                     self.enemies.remove(attackAt)
@@ -67,17 +74,33 @@ class SimpleRimWorldEnv(gym.Env):
                 targetIndex = np.random.randint(0, len(self.actors))
                 target = self.actors[targetIndex]
                 if np.random.uniform(0, 10) <= 1:
-                    collides = any([intersection.doesIntersect(enemy, target, box, 1, 1) for box in self.blocks])
+                    collides = self._checkCollision(enemy, target)
                     if not collides:
+                        self.shots = [(enemy, target)]
                         self.actors.remove(target)
                         reward -= 1.0
 
         reward -= 0.00000001
 
-        done = len(self.actors) == 0 or len(self.enemies) == 0
+        if len(self.enemies) == 0:
+            reward += 0.05
+            self._addEnemies()
+
+        done = len(self.actors) == 0
         obs = self._getAll()
 
         return obs, reward, done, {}
+
+    def _checkCollision(self, shooter, target) -> bool:
+        shooter = (shooter[0]*self.SQUARE_SIZE + self.SQUARE_SIZE/2, shooter[1]*self.SQUARE_SIZE + self.SQUARE_SIZE/2)
+        target = (target[0]*self.SQUARE_SIZE + self.SQUARE_SIZE/2, target[1]*self.SQUARE_SIZE + self.SQUARE_SIZE/2)
+
+        for box in self.blocks:
+            box = (box[0]*self.SQUARE_SIZE, box[1]*self.SQUARE_SIZE)
+            if intersection.doesIntersect(shooter, target, box, 1*self.SQUARE_SIZE, 1*self.SQUARE_SIZE):
+                return True
+
+        return False
 
     def _getAll(self):
         return np.asarray([[self._getElemForPos((i, j)) for j in range(self.sizeY)] for i in range(self.sizeX)]).ravel()
@@ -91,24 +114,7 @@ class SimpleRimWorldEnv(gym.Env):
             return 3
         return 0
 
-    def reset(self):
-        self.episodeNumber += 1
-
-        if self.episodeNumber < 100:
-            self.numberOfActors = 1
-            self.numberOfEnemies = 1
-        elif self.episodeNumber < 200:
-            self.numberOfActors = 2
-            self.numberOfEnemies = 2
-        else:
-            self.numberOfActors = 2
-            self.numberOfEnemies = 2
-
-        self.actors = [(int(self.sizeX/2), int(self.sizeY/2))] #array of positions
-        self.blocks = [(1, 1)] #array of positions
-        self.moving = {0: False} #dictionary of index of actor to False or position
-        self.enemies = [] #array of positions
-
+    def _addEnemies(self):
         possibleEnemies = [(x, 0) for x in range(self.sizeX)] \
                             + [(x, self.sizeY - 1) for x in range(self.sizeX)] \
                             + [(0, y) for y in range(1, self.sizeY-1)] \
@@ -117,6 +123,26 @@ class SimpleRimWorldEnv(gym.Env):
         np.random.shuffle(possibleEnemies) # FIXME use seed
 
         self.enemies = possibleEnemies[:self.numberOfEnemies]
+
+    def reset(self):
+        self.episodeNumber += 1
+
+        if self.episodeNumber < 100:
+            self.numberOfActors = 1
+            self.numberOfEnemies = 1
+        elif self.episodeNumber < 200:
+            self.numberOfActors = 1
+            self.numberOfEnemies = 1
+        else:
+            self.numberOfActors = 1
+            self.numberOfEnemies = 1
+
+        self.actors = [(int(self.sizeX/2), int(self.sizeY/2))] #array of positions
+        self.blocks = [(1, 1)] #array of positions
+        self.moving = {0: False} #dictionary of index of actor to False or position
+        self.enemies = [] #array of positions
+
+        self._addEnemies()
 
         if self.numberOfActors > 1:
             self.actors.append((int(self.sizeX / 2) + 1, int(self.sizeY / 2)))
@@ -139,21 +165,24 @@ class SimpleRimWorldEnv(gym.Env):
         self.screen.fill((0, 0, 0))
         game.display.flip()
 
-        SQUARE_SIZE = min(self.screen.get_rect().width/self.sizeX, self.screen.get_rect().height/self.sizeY)
-        WHITE = game.Color(255, 255, 255)
-        RED = game.Color(255, 0, 0)
-
         for actor in self.actors:
-            pos = (actor[0]*SQUARE_SIZE + SQUARE_SIZE/2, actor[1]*SQUARE_SIZE + SQUARE_SIZE/2)
-            game.draw.circle(self.screen, WHITE, pos, SQUARE_SIZE/2 - 5)
+            pos = (actor[0]*self.SQUARE_SIZE + self.SQUARE_SIZE/2, actor[1]*self.SQUARE_SIZE + self.SQUARE_SIZE/2)
+            game.draw.circle(self.screen, self.WHITE, pos, self.SQUARE_SIZE/2 - 5)
 
         for box in self.blocks:
-            rectangle = (box[0] * SQUARE_SIZE, box[1] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
-            game.draw.rect(self.screen, WHITE, rectangle)
+            rectangle = (box[0] * self.SQUARE_SIZE, box[1] * self.SQUARE_SIZE, self.SQUARE_SIZE, self.SQUARE_SIZE)
+            game.draw.rect(self.screen, self.WHITE, rectangle)
 
         for enemy in self.enemies:
-            pos = (enemy[0]*SQUARE_SIZE + SQUARE_SIZE/2, enemy[1]*SQUARE_SIZE + SQUARE_SIZE/2)
-            game.draw.circle(self.screen, RED, pos, SQUARE_SIZE/2 - 5)
+            pos = (enemy[0]*self.SQUARE_SIZE + self.SQUARE_SIZE/2, enemy[1]*self.SQUARE_SIZE + self.SQUARE_SIZE/2)
+            game.draw.circle(self.screen, self.RED, pos, self.SQUARE_SIZE/2 - 5)
+
+        for shot in self.shots:
+            game.draw.line(self.screen, self.WHITE,
+                           game.Vector2(shot[0]) * self.SQUARE_SIZE + game.Vector2(self.SQUARE_SIZE/2, self.SQUARE_SIZE/2),
+                           game.Vector2(shot[1]) * self.SQUARE_SIZE + game.Vector2(self.SQUARE_SIZE/2, self.SQUARE_SIZE/2))
+
+        self.shots = []
 
         game.display.update()
 

@@ -15,12 +15,12 @@ n_rollout = 10
 
 
 class ActorCritic(nn.Module):
-    def __init__(self, sizeGrid: int, numberOfActors: int):
+    def __init__(self, sizeGrid: int, maxActors: int):
         super(ActorCritic, self).__init__()
         self.data = []
 
         self.fc1 = nn.Linear(sizeGrid, 256)
-        self.fc_pi = nn.Linear(256, sizeGrid*numberOfActors + sizeGrid*numberOfActors)
+        self.fc_pi = nn.Linear(256, sizeGrid*maxActors + sizeGrid*maxActors)
         self.fc_v = nn.Linear(256, 1)
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
 
@@ -81,11 +81,11 @@ def actionAttack(targetId: int, pos: tuple):
 
 SIZE_X = 10
 SIZE_Y = 10
-ACTORS = 1
+MAX_ACTORS = 2
 
 
 def translateToAction(result: int):
-    index = numpy.unravel_index(result, (SIZE_X, SIZE_Y, ACTORS, 2))
+    index = numpy.unravel_index(result, (SIZE_X, SIZE_Y, MAX_ACTORS, 2))
     if index[3] == 0:
         return actionMove(index[2], (index[0], index[1]))
     else:
@@ -95,7 +95,7 @@ def translateToAction(result: int):
 def main():
     screen = game.display.set_mode((640, 480))
     env = SimpleRimWorldEnv(SIZE_X, SIZE_Y, screen)
-    model = ActorCritic(SIZE_X*SIZE_Y, ACTORS)
+    model = ActorCritic(SIZE_X*SIZE_Y, MAX_ACTORS)
     print_interval = 20
     score = 0.0
 
@@ -113,10 +113,10 @@ def main():
                 s = s_prime
                 score += r
 
+                env.render()
                 if done:
                     break
 
-            env.render()
             model.train_net()
 
         if n_epi % print_interval == 0 and n_epi != 0:
