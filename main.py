@@ -48,6 +48,8 @@ class ReplayBuffer():
 class Qnet(nn.Module):
     def __init__(self, sizeGrid, maxActors):
         super(Qnet, self).__init__()
+        self.actionspace = sizeGrid*maxActors + sizeGrid*maxActors
+
         self.fc1 = nn.Linear(sizeGrid, 128)
         self.fc2 = nn.Linear(128, 128)
         self.fc3 = nn.Linear(128, sizeGrid*maxActors + sizeGrid*maxActors)
@@ -62,7 +64,7 @@ class Qnet(nn.Module):
         out = self.forward(obs)
         coin = random.random()
         if coin < epsilon:
-            return random.randint(0, 1)
+            return random.randint(0, self.actionspace - 1)
         else:
             return out.argmax().item()
 
@@ -114,7 +116,7 @@ def main():
     score = 0.0
     optimizer = optim.Adam(q.parameters(), lr=learning_rate)
 
-    for n_epi in range(10000):
+    for n_epi in range(1000000):
         epsilon = max(0.01, 0.08 - 0.01 * (n_epi / 200))  # Linear annealing from 8% to 1%
         s = env.reset()
         done = False

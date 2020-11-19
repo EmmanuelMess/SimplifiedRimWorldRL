@@ -51,6 +51,8 @@ class SimpleRimWorldEnv(gym.Env):
         isAttack = action[3][0]
         attackAt = action[3][1]
 
+        doneSomething = False
+
         if actorIndex >= len(self.actors):
             reward -= 0.0000002
         else:
@@ -58,6 +60,7 @@ class SimpleRimWorldEnv(gym.Env):
                 if moveTo not in self.actors and moveTo not in self.blocks and moveTo not in self.enemies:
                     self.actors.remove(self.actors[actorIndex])
                     self.actors.append(moveTo)
+                    doneSomething = True
                 else:
                     reward -= 0.0000002
 
@@ -66,8 +69,14 @@ class SimpleRimWorldEnv(gym.Env):
                 if attackAt in self.enemies and not collided:
                     reward += 1.0
                     self.enemies.remove(attackAt)
+                    doneSomething = True
                 else:
                     reward -= 0.0000002
+
+        if not doneSomething:
+            self.episodesNotDoingAnything += 1
+        else:
+            self.episodesNotDoingAnything = 0
 
         for enemy in self.enemies:
             if len(self.actors) > 0:
@@ -80,13 +89,14 @@ class SimpleRimWorldEnv(gym.Env):
                         self.actors.remove(target)
                         reward -= 1.0
 
-        reward -= 0.00000001
-
         if len(self.enemies) == 0:
             reward += 0.05
             self._addEnemies()
 
-        done = len(self.actors) == 0
+        if self.episodesNotDoingAnything >= 10:
+            reward -= 0.05
+
+        done = len(self.actors) == 0 or self.episodesNotDoingAnything >= 10
         obs = self._getAll()
 
         return obs, reward, done, {}
@@ -127,20 +137,19 @@ class SimpleRimWorldEnv(gym.Env):
     def reset(self):
         self.episodeNumber += 1
 
-        if self.episodeNumber < 100:
-            self.numberOfActors = 1
-            self.numberOfEnemies = 1
-        elif self.episodeNumber < 200:
+        if self.episodeNumber < 5000:
             self.numberOfActors = 1
             self.numberOfEnemies = 1
         else:
-            self.numberOfActors = 1
-            self.numberOfEnemies = 1
+            self.numberOfActors = 2
+            self.numberOfEnemies = 3
 
         self.actors = [(int(self.sizeX/2), int(self.sizeY/2))] #array of positions
         self.blocks = [(1, 1)] #array of positions
         self.moving = {0: False} #dictionary of index of actor to False or position
         self.enemies = [] #array of positions
+
+        self.episodesNotDoingAnything = 0
 
         self._addEnemies()
 
