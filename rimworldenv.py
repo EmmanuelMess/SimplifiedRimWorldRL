@@ -142,7 +142,7 @@ class SimpleRimWorldEnv(gym.Env):
             self.numberOfEnemies = 1
         else:
             self.numberOfActors = 2
-            self.numberOfEnemies = 3
+            self.numberOfEnemies = 2
 
         self.actors = [(int(self.sizeX/2), int(self.sizeY/2))] #array of positions
         self.blocks = [(1, 1)] #array of positions
