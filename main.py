@@ -165,7 +165,7 @@ def main():
                 score = 0.0
     env.close()
 
-    plt.plot(xToPlot, yToPlot, '-ok')
+    plt.plot(xToPlot, yToPlot, 'ok')
     plt.xlabel("Episode number")
     plt.ylabel("Score")
     plt.show()

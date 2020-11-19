@@ -90,7 +90,7 @@ class SimpleRimWorldEnv(gym.Env):
                         reward -= 1.0
 
         if len(self.enemies) == 0:
-            reward += 0.05
+            reward += 0.5
             self._addEnemies()
 
         if self.episodesNotDoingAnything >= 10:

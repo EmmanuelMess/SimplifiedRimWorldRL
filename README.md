@@ -16,7 +16,7 @@ Rewards:
 * -0.0000002 for moving to an occupied spot
 * -0.0000002 for shooting an empty spot
 * -0.05 for not doing anything for 10 consecutive steps
-* +0.05 for killing all enemies in a round
+* +0.5 for killing all enemies in a round
 
 [![Chat on Telegram](https://img.shields.io/badge/Chat%20on-Telegram-brightgreen.svg)](https://t.me/EmmanuelsApps)  
 
