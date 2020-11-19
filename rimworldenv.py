@@ -25,7 +25,7 @@ class SimpleRimWorldEnv(gym.Env):
     def __init__(self, sizeX: int, sizeY: int, screen: game.Surface = None):
         super(SimpleRimWorldEnv, self).__init__()
 
-        self.SQUARE_SIZE = min(screen.get_rect().width / sizeX, screen.get_rect().height / sizeY)
+        self.SQUARE_SIZE = 0 if (screen is None) else min(screen.get_rect().width / sizeX, screen.get_rect().height / sizeY)
 
         self.sizeX = sizeX
         self.sizeY = sizeY
@@ -137,7 +137,7 @@ class SimpleRimWorldEnv(gym.Env):
     def reset(self):
         self.episodeNumber += 1
 
-        if self.episodeNumber < 5000:
+        if self.episodeNumber < 500000:
             self.numberOfActors = 1
             self.numberOfEnemies = 1
         else:

@@ -6,6 +6,8 @@ import gym
 import collections
 import random
 
+import matplotlib.pyplot as plt
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -105,18 +107,29 @@ def translateToAction(result: int):
 
 
 def main():
-    screen = game.display.set_mode((640, 480))
+    plot = True
+    xToPlot = []
+    yToPlot = []
+
+    render = False
+
+    if render:
+        screen = game.display.set_mode((640, 480))
+    else:
+        screen = None
+
     env = SimpleRimWorldEnv(SIZE_X, SIZE_Y, screen)
     q = Qnet(SIZE_X*SIZE_Y, MAX_ACTORS)
     q_target = Qnet(SIZE_X*SIZE_Y, MAX_ACTORS)
     q_target.load_state_dict(q.state_dict())
     memory = ReplayBuffer()
 
+    total = 1000000
     print_interval = 20
     score = 0.0
     optimizer = optim.Adam(q.parameters(), lr=learning_rate)
 
-    for n_epi in range(1000000):
+    for n_epi in range(total):
         epsilon = max(0.01, 0.08 - 0.01 * (n_epi / 200))  # Linear annealing from 8% to 1%
         s = env.reset()
         done = False
@@ -129,19 +142,30 @@ def main():
             s = s_prime
 
             score += r
-            env.render()
+            if render:
+                env.render()
             if done:
                 break
 
         if memory.size() > 2000:
             train(q, q_target, memory, optimizer)
 
-        if n_epi % print_interval == 0 and n_epi != 0:
-            q_target.load_state_dict(q.state_dict())
-            print("n_episode :{}, score : {:.1f}, n_buffer : {}, eps : {:.1f}%".format(
-                n_epi, score / print_interval, memory.size(), epsilon * 100))
+        if plot:
+            xToPlot.append(n_epi)
+            yToPlot.append(score)
             score = 0.0
+
+            if n_epi/total*100 - int(n_epi/total*100) < 0.01:
+                print("{:.2f}%".format(n_epi/total*100))
+        else:
+            if n_epi % print_interval == 0 and n_epi != 0:
+                q_target.load_state_dict(q.state_dict())
+                print("n_episode :{}, score : {:.1f}, n_buffer : {}, eps : {:.1f}%".format(
+                    n_epi, score / print_interval, memory.size(), epsilon * 100))
+                score = 0.0
     env.close()
+
+    plt.plot(xToPlot, yToPlot, '-ok')
 
 
 if __name__ == '__main__':
