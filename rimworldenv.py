@@ -137,7 +137,7 @@ class SimpleRimWorldEnv(gym.Env):
     def reset(self):
         self.episodeNumber += 1
 
-        if self.episodeNumber < 500000:
+        if self.episodeNumber < 5000:
             self.numberOfActors = 1
             self.numberOfEnemies = 1
         else:

@@ -4,8 +4,8 @@ Very simple implementation of RimWorld's mechanics in a gym env to train a reinf
 
 [![Chat on Telegram](https://img.shields.io/badge/Chat%20on-Telegram-brightgreen.svg)](https://t.me/EmmanuelsApps)  
 
-## Screenshots
-None yet
+## Graph
+<img src="plot.png" width="640"/>
 
 Thanks:
 * [seungeunrho/minimalRL](https://github.com/seungeunrho/minimalRL)

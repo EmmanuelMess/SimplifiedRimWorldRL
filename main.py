@@ -124,7 +124,7 @@ def main():
     q_target.load_state_dict(q.state_dict())
     memory = ReplayBuffer()
 
-    total = 1000000
+    total = 10000
     print_interval = 20
     score = 0.0
     optimizer = optim.Adam(q.parameters(), lr=learning_rate)
@@ -166,7 +166,9 @@ def main():
     env.close()
 
     plt.plot(xToPlot, yToPlot, '-ok')
-
+    plt.xlabel("Episode number")
+    plt.ylabel("Score")
+    plt.show()
 
 if __name__ == '__main__':
     main()
